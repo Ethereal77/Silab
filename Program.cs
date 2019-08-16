@@ -64,7 +64,8 @@ namespace Textuo
                 else
                 {
                     // Mostrar las sílabas de una sola palabra
-                    MostrarSílabas(arg);
+                    var divisor = new DivisorDePalabras();
+                    MostrarSílabas(arg, divisor);
                 }
             }
         }
@@ -74,10 +75,9 @@ namespace Textuo
         //
         // Divide una palabra en sus sílabas y las muestra.
         //
-        private static void MostrarSílabas(string palabra)
+        private static void MostrarSílabas(string palabra, DivisorDePalabras divisorDePalabras)
         {
-            var sílabas = DividirEnSílabas(palabra);
-            Array.Reverse(sílabas);
+            var sílabas = divisorDePalabras.DividirEnSílabas(palabra);
 
             Console.WriteLine( string.Join("-", sílabas) );
         }
@@ -112,10 +112,12 @@ namespace Textuo
         //
         private static void LeerEntrada()
         {
+            var divisor = new DivisorDePalabras();
+
             string línea;
             while ((línea = Console.ReadLine()) != null)
             {
-                MostrarSílabas(línea);
+                MostrarSílabas(línea, divisor);
             }
         }
 
@@ -171,197 +173,5 @@ namespace Textuo
         }
 
         #endregion
-
-        const char LETRA_NO_VÁLIDA = '\0';
-
-        private enum Vocal
-        {
-            Ninguna,
-            Cerrada,
-            Abierta,
-        }
-
-        private static string[] DividirEnSílabas(string palabra)
-        {
-            if (string.IsNullOrWhiteSpace(palabra))
-                return Array.Empty<string>();
-
-            palabra = palabra.Trim();
-
-            char letra;
-            char letraSig = LETRA_NO_VÁLIDA;
-
-            var listaSílabas = new List<string>();
-
-            int numVocales = 0;
-            string sílaba = "";
-
-            for (int i = palabra.Length - 1; i >= 0; --i)
-            {
-                bool terminada = false;
-
-                letra = palabra[i];
-
-                bool esVocal = EsVocal(letra, out Vocal tipoVocal);
-                bool esVocalSig = EsVocal(letraSig, out Vocal tipoVocalSig);
-
-                string letraCombi = letra + (letraSig != LETRA_NO_VÁLIDA ? letraSig.ToString() : "");
-
-                if (esVocal && !esVocalSig)
-                    numVocales++;
-
-                if (numVocales > 1 && !esVocalSig)
-                    terminada = true;
-                else if (!esVocal && !esVocalSig && !EsGrupoConsonántico(letraCombi) && (numVocales == 1 && i > 1))
-                    terminada = true;
-                else if ((tipoVocal == Vocal.Abierta && tipoVocalSig == Vocal.Abierta) ||
-                        (tipoVocal == Vocal.Cerrada && TieneTilde(letra) && esVocalSig) ||
-                        (tipoVocal == Vocal.Abierta && (tipoVocalSig == Vocal.Cerrada && TieneTilde(letraSig))) ||
-                        ((esVocal && esVocalSig) && (letra == letraSig)))
-                {
-                    terminada = true;
-                    numVocales++;
-                }
-
-                if (terminada)
-                {
-                    listaSílabas.Add(sílaba);
-                    sílaba = letra.ToString();
-                    numVocales--;
-                }
-                else
-                    sílaba = letra + sílaba;
-
-                letraSig = letra;
-            }
-
-            listaSílabas.Add(sílaba);
-
-            return listaSílabas.ToArray();
-        }
-
-        private static bool TieneTilde(char letra)
-        {
-            letra = char.ToLower(letra);
-        
-            switch(letra)
-            {
-                case 'á':
-                case 'é':
-                case 'í':
-                case 'ó':
-                case 'ú':
-                    return true;
-                
-                default:
-                    return false;
-            }
-        }
-
-        private static bool EsVocal(char letra, out Vocal tipoDeVocal)
-        {
-            if(letra != LETRA_NO_VÁLIDA)
-            {
-                tipoDeVocal = TipoDeVocal(letra);
-                return EsVocal(letra);
-            }
-
-            tipoDeVocal = Vocal.Ninguna;
-            return false;
-        }
-
-        private static bool EsVocal(char letra)
-        {
-            if(letra != LETRA_NO_VÁLIDA)
-            {
-                switch(letra)
-                {
-                    case 'a':
-                    case 'á':
-                    case 'e':
-                    case 'é':
-                    case 'i':
-                    case 'í':
-                    case 'o':
-                    case 'ó':
-                    case 'u':
-                    case 'ú':
-                    case 'ü':
-                        return true;
-                    
-                    default:
-                        return false;
-                }
-            }
-            
-            return false;
-        }
-
-        private static Vocal TipoDeVocal(char letra)
-        {
-            if(letra != LETRA_NO_VÁLIDA)
-            {
-                if(EsVocal(letra))
-                {
-                    switch(letra)
-                    {
-                        case 'i':
-                        case 'í':
-                        case 'u':
-                        case 'ú':
-                        case 'ü':
-                            return Vocal.Cerrada;
-                        
-                        default:
-                            return Vocal.Abierta;
-                    }
-                }
-            }
-            
-            return Vocal.Ninguna;
-        }
-
-        private static bool EsLetra(char letra)
-        {
-            if(letra >= 'a' && letra <= 'z' || letra == 'ñ')
-                return true;
-            if(letra == 'á' || letra == 'é' || letra == 'í' || letra == 'ó' || letra == 'ú' || letra == 'ü')
-                return true;
-            
-            return false;
-        }
-
-        private static bool EsGrupoConsonántico(string letras)
-        {
-            letras = letras.ToLower();
-
-            switch(letras)
-            {
-                case "bl":
-                case "br":
-                case "cl":
-                case "cr":
-                case "dl":
-                case "dr":
-                case "fl":
-                case "fr":
-                case "gl":
-                case "gr":
-                case "pl":
-                case "pr":
-                case "tl":
-                case "tr":
-                case "kl":
-                case "kr":
-                case "ll":
-                case "rr":
-                case "ch":
-                case "qu":
-                    return true;
-
-                default:
-                    return false;
-            }
-        }
     }
 }
