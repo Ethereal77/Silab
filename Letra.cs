@@ -22,7 +22,7 @@ namespace Textuo
             }
         }
 
-        public static bool EsVocal(this char letra, out Vocal tipoDeVocal)
+        public static bool EsVocal(this char letra, out TipoDeVocal tipoDeVocal)
         {
             if(letra != NoVálida)
             {
@@ -30,60 +30,18 @@ namespace Textuo
                 return EsVocal(letra);
             }
 
-            tipoDeVocal = Vocal.Ninguna;
+            tipoDeVocal = Textuo.TipoDeVocal.Ninguna;
             return false;
         }
 
-        public static bool EsVocal(this char letra)
-        {
-            if(letra != NoVálida)
-            {
-                switch(letra)
-                {
-                    case 'a':
-                    case 'á':
-                    case 'e':
-                    case 'é':
-                    case 'i':
-                    case 'í':
-                    case 'o':
-                    case 'ó':
-                    case 'u':
-                    case 'ú':
-                    case 'ü':
-                        return true;
-                    
-                    default:
-                        return false;
-                }
-            }
-            
-            return false;
-        }
+        public static bool EsVocal(this char letra) => "aáeéiíoóuúü".IndexOf(letra) >= 0;
 
-        public static Vocal TipoDeVocal(this char letra)
-        {
-            if(letra != NoVálida)
-            {
-                if(EsVocal(letra))
-                {
-                    switch(letra)
-                    {
-                        case 'i':
-                        case 'í':
-                        case 'u':
-                        case 'ú':
-                        case 'ü':
-                            return Vocal.Cerrada;
-                        
-                        default:
-                            return Vocal.Abierta;
-                    }
-                }
-            }
-            
-            return Vocal.Ninguna;
-        }
+        public static TipoDeVocal TipoDeVocal(this char letra) =>
+            "iíuúü".IndexOf(letra) >= 0
+                ? Textuo.TipoDeVocal.Cerrada
+                : EsVocal(letra)
+                     ? Textuo.TipoDeVocal.Abierta
+                     : Textuo.TipoDeVocal.Ninguna;
 
         public static bool EsLetra(this char letra)
         {
@@ -101,20 +59,25 @@ namespace Textuo
             {
                 switch(letras.letraA)
                 {
+                    // Grupos br, cr, kr, dr, fr, gr, pr y tr
+                    case 'b':
                     case 'c':
                     case 'd':
                     case 'f':
                     case 'g':
+                    case 'k':
                     case 'p':
                     case 't':
-                    case 'k':
+                        return true;
+                    
+                    // Grupos ll y rr
+                    case 'l':
+                    case 'r':
                         return true;
                 }
             }
 
-            else if(letras == ('l','l') ||
-                    letras == ('r','r') ||
-                    letras == ('c','h') ||
+            else if(letras == ('c','h') ||
                     letras == ('q','u'))
                 return true;
             
@@ -122,7 +85,27 @@ namespace Textuo
         }
     }
 
-    public enum Vocal
+    public struct InfoLetra
+    {
+        // Última letra leída, o bien 'Letra.NoVálida' si no se ha podido leer.
+        public char Letra;
+        // Indica si la última letra leída es una vocal.
+        public bool EsVocal;
+        // Indica si la última letra leída es una vocal acentuada.
+        public bool EstáAcentuada;
+        // Tipo de la última vocal leída, o bien 'Vocal.Ninguna' si no se ha podido leer o no es una vocal.
+        public TipoDeVocal TipoDeVocal;
+
+        public InfoLetra(char letra)
+        {
+            Letra = letra;
+
+            EsVocal = letra.EsVocal(out TipoDeVocal);
+            EstáAcentuada = letra.TieneTilde();
+        }
+    }
+
+    public enum TipoDeVocal
     {
         Ninguna,
         Cerrada,

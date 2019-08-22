@@ -77,9 +77,13 @@ namespace Textuo
         //
         private static void MostrarSílabas(string palabra, DivisorDePalabras divisorDePalabras)
         {
+            Console.Write($"{palabra} --> ");
+
             var sílabas = divisorDePalabras.DividirEnSílabas(palabra);
 
+            Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine( string.Join("-", sílabas) );
+            Console.ResetColor();
         }
 
         //
