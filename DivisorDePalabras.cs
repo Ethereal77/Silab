@@ -17,7 +17,7 @@ namespace Textuo
         }
 
 
-        public string[] DividirEnSílabas(string palabra)
+        public IEnumerable<string> DividirEnSílabas(string palabra)
         {
             if (string.IsNullOrWhiteSpace(palabra))
                 return Array.Empty<string>();
@@ -31,26 +31,48 @@ namespace Textuo
             
             listaSílabas.Clear();
             LeerPalabra();
-            //BuscarSílabas(palabra);
 
-            return listaSílabas.ToArray();
+            return listaSílabas;
         }
 
+        //
+        // Lee una palabra y obtiene una lista de las sílabas que la componen.
+        //
         private void LeerPalabra()
         {
             // Palabra := <Sílaba> { [ '-' ] <Sílaba> }
 
-            while(LeerSílaba())
+            bool continuar = true;
+            do
             {
-                var inicio = contexto.Posición;
-                var longitud = contexto.Cursor - contexto.Posición;
+                // Leemos una sílaba
+                if(LeerSílaba())
+                {
+                    var inicio = contexto.Posición;
+                    var longitud = contexto.Cursor - contexto.Posición;
 
-                listaSílabas.Add( contexto.Palabra.Substring(inicio, longitud) );
+                    listaSílabas.Add( contexto.Palabra.Substring(inicio, longitud) );
 
-                contexto.Posición = contexto.Cursor;
-            }
+                    contexto.Posición = contexto.Cursor;
+                }
+                // Si encontramos un carácter que no sea letra, lo añadimos como si una sílaba fuese
+                else if(MirarLetra(out char letra) && !letra.EsLetra() )
+                {
+                    ConsumirLetra();
+                    listaSílabas.Add( contexto.Palabra.Substring(contexto.Posición, 1) );
+
+                    contexto.Posición = contexto.Cursor;
+                }
+                else
+                    // Si no hay sílabas ni caracteres restantes, hemos acabado
+                    continuar = false;
+            
+            } while(continuar);
         }
 
+        //
+        // Lee una sílaba de una palabra.
+        //
         private bool LeerSílaba()
         {
             // Sílaba := <GrupoConsonantes> <ParteVocálica>
@@ -496,6 +518,21 @@ namespace Textuo
             }
 
             letra = contexto.Palabra[posición];
+
+            return letra.EsLetra();
+        }
+
+        private bool MirarLetra(out char letra)
+        {
+            var posición = contexto.Cursor;
+            if(posición < 0 || posición >= contexto.Palabra.Length)
+            {
+                letra = Letra.NoVálida;
+                return false;
+            }
+
+            letra = contexto.Palabra[posición];
+
             return true;
         }
 
