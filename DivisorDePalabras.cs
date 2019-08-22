@@ -8,6 +8,14 @@ namespace Textuo
     {
         private readonly List<string> listaSílabas = new List<string>();
         private readonly Contexto contexto = new Contexto();
+        private readonly Configuración config;
+
+
+        public DivisorDePalabras(Configuración configuración = null)
+        {
+            config = configuración ?? new Configuración();
+        }
+
 
         public string[] DividirEnSílabas(string palabra)
         {
@@ -57,7 +65,7 @@ namespace Textuo
             // GrupoConsonantes := <GrupoConsonánticoIndivisible>
             //                   | <Consonante>
 
-            if(!MirarLetra(out InfoLetra letraActual))
+            if(!MirarLetra(out Letra.Info letraActual))
                 return false;
             if(!letraActual.Letra.EsLetra())
                 return false;
@@ -127,7 +135,7 @@ namespace Textuo
         //                 | <Hiato>
         //                 | <Vocal>
         //
-        private bool LeerParteVocálica(in InfoLetra letraActual)
+        private bool LeerParteVocálica(in Letra.Info letraActual)
         {
             // --- Grupo de Vocales ----------------------
 
@@ -151,7 +159,7 @@ namespace Textuo
             }
 
             // Comprobamos si hay otra letra a continuación
-            if(!MirarLetra(out InfoLetra siguiente))
+            if(!MirarLetra(out Letra.Info siguiente))
                 // Fin de la sílaba
                 return true;
             
@@ -301,19 +309,19 @@ namespace Textuo
         // Lee un grupo consonántico, una unión de dos consonantes que no se pueden separar en
         // diferentes sílabas.
         //
-        private bool LeerGrupoConsonántico(in InfoLetra letraActual)
+        private bool LeerGrupoConsonántico(in Letra.Info letraActual)
         {
             Debug.Assert(!letraActual.EsVocal);
 
             // Miramos la letra siguiente, que debe ser también una consonante
-            if(!MirarLetra(+1, out InfoLetra letraSig))
+            if(!MirarLetra(+1, out Letra.Info letraSig))
                 return false;
             if(letraSig.EsVocal)
                 // Es una consonante suelta
                 return false;
             
             // Comprobamos si la pareja de consonantes forman un grupo consonántico
-            else if((letraActual.Letra, letraSig.Letra).EsGrupoConsonántico())
+            else if((letraActual.Letra, letraSig.Letra).EsGrupoConsonántico(config))
             {
                 ConsumirLetras(2);
                 return true;
@@ -326,7 +334,7 @@ namespace Textuo
         // Lee un triptongo, una unión de tres vocales, una débil, una fuerte y otra débil, que forman parte de la
         // misma sílaba.
         //
-        private bool LeerTriptongo(in InfoLetra letraActual)
+        private bool LeerTriptongo(in Letra.Info letraActual)
         {
             Debug.Assert(letraActual.EsVocal);
 
@@ -338,8 +346,8 @@ namespace Textuo
                 return false;
 
             // Miramos las dos letras siguientes, que deben ser ambas vocales
-            if(!MirarLetra(+1, out InfoLetra letraSig1) ||
-               !MirarLetra(+2, out InfoLetra letraSig2))
+            if(!MirarLetra(+1, out Letra.Info letraSig1) ||
+               !MirarLetra(+2, out Letra.Info letraSig2))
                return false;
             if(!letraSig1.EsVocal || !letraSig2.EsVocal)
                 return false; 
@@ -364,12 +372,12 @@ namespace Textuo
         //
         // Lee un diptongo, una unión de dos vocales, una fuerte y una débil, que forman parte de la misma sílaba.
         //
-        private bool LeerDiptongo(in InfoLetra letraActual)
+        private bool LeerDiptongo(in Letra.Info letraActual)
         {
             Debug.Assert(letraActual.EsVocal);
 
             // Miramos de qué tipo es la letra siguiente. Debe haber una vocal a continuación
-            if(!MirarLetra(+1, out InfoLetra letraSig))
+            if(!MirarLetra(+1, out Letra.Info letraSig))
                 return false;
             if(!letraSig.EsVocal)
                 // Si la letra siguiente es una consonante, no hay diptongo
@@ -415,12 +423,12 @@ namespace Textuo
         //
         // Lee un hiato, una unión de dos vocales que forman parte de sílabas distintas.
         //
-        private bool LeerHiato(in InfoLetra letraActual)
+        private bool LeerHiato(in Letra.Info letraActual)
         {
             Debug.Assert(letraActual.EsVocal);
 
             // Miramos de qué tipo es la letra siguiente. Debe haber una vocal a continuación
-            if(!MirarLetra(+1, out InfoLetra letraSig))
+            if(!MirarLetra(+1, out Letra.Info letraSig))
                 return false;
             if(!letraSig.EsVocal)
                 // Si la letra siguiente es una consonante, no hay hiato
@@ -491,20 +499,20 @@ namespace Textuo
             return true;
         }
 
-        private bool MirarLetra(int avance, out InfoLetra infoLetra)
+        private bool MirarLetra(int avance, out Letra.Info letraInfo)
         {
             bool éxito = MirarLetra(avance, out char letra);
 
-            infoLetra = new InfoLetra(letra);
+            letraInfo = new Letra.Info(letra);
 
             return éxito;
         }
 
-        private bool MirarLetra(out InfoLetra infoLetra)
+        private bool MirarLetra(out Letra.Info letraInfo)
         {
             bool éxito = MirarLetra(0, out char letra);
 
-            infoLetra = new InfoLetra(letra);
+            letraInfo = new Letra.Info(letra);
 
             return éxito;
         }

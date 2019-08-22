@@ -6,7 +6,7 @@ namespace Textuo
     {
         public const char NoVálida = '\0';
 
-        public static bool TieneTilde(this char letra)
+        private static bool TieneTilde(this char letra)
         {
             switch(letra)
             {
@@ -22,7 +22,7 @@ namespace Textuo
             }
         }
 
-        public static bool EsVocal(this char letra, out TipoDeVocal tipoDeVocal)
+        private static bool EsVocal(this char letra, out TipoDeVocal tipoDeVocal)
         {
             if(letra != NoVálida)
             {
@@ -34,7 +34,7 @@ namespace Textuo
             return false;
         }
 
-        public static bool EsVocal(this char letra) => "aáeéiíoóuúü".IndexOf(letra) >= 0;
+        private static bool EsVocal(this char letra) => "aáeéiíoóuúü".IndexOf(letra) >= 0;
 
         public static TipoDeVocal TipoDeVocal(this char letra) =>
             "iíuúü".IndexOf(letra) >= 0
@@ -53,13 +53,14 @@ namespace Textuo
             return false;
         }
 
-        public static bool EsGrupoConsonántico(this (char letraA, char letraB) letras)
+        public static bool EsGrupoConsonántico(this (char letraA, char letraB) letras, Configuración configuración = null)
         {
             if(letras.letraB == 'l' || letras.letraB == 'r')
             {
                 switch(letras.letraA)
                 {
-                    // Grupos br, cr, kr, dr, fr, gr, pr y tr
+                    // Grupos br, cr, kr, dr, fr, gr, pr y tr,
+                    //        bl, cl, kl, dl, fl, gl, pl y tl
                     case 'b':
                     case 'c':
                     case 'd':
@@ -67,8 +68,12 @@ namespace Textuo
                     case 'g':
                     case 'k':
                     case 'p':
-                    case 't':
                         return true;
+
+                    case 't':
+                        return (letras.letraB == 'l')
+                            ? configuración?.TratarTlComoGrupoConsonántico == true
+                            : true;
                     
                     // Grupos ll y rr
                     case 'l':
@@ -83,25 +88,25 @@ namespace Textuo
             
             return false;
         }
-    }
 
-    public struct InfoLetra
-    {
-        // Última letra leída, o bien 'Letra.NoVálida' si no se ha podido leer.
-        public char Letra;
-        // Indica si la última letra leída es una vocal.
-        public bool EsVocal;
-        // Indica si la última letra leída es una vocal acentuada.
-        public bool EstáAcentuada;
-        // Tipo de la última vocal leída, o bien 'Vocal.Ninguna' si no se ha podido leer o no es una vocal.
-        public TipoDeVocal TipoDeVocal;
-
-        public InfoLetra(char letra)
+        public struct Info
         {
-            Letra = letra;
+            // Última letra leída, o bien 'Letra.NoVálida' si no se ha podido leer.
+            public char Letra;
+            // Indica si la última letra leída es una vocal.
+            public bool EsVocal;
+            // Indica si la última letra leída es una vocal acentuada.
+            public bool EstáAcentuada;
+            // Tipo de la última vocal leída, o bien 'Vocal.Ninguna' si no se ha podido leer o no es una vocal.
+            public TipoDeVocal TipoDeVocal;
 
-            EsVocal = letra.EsVocal(out TipoDeVocal);
-            EstáAcentuada = letra.TieneTilde();
+            public Info(char letra)
+            {
+                Letra = letra;
+
+                EsVocal = letra.EsVocal(out TipoDeVocal);
+                EstáAcentuada = letra.TieneTilde();
+            }
         }
     }
 
