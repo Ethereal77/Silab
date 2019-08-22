@@ -476,18 +476,6 @@ namespace Textuo
 
 
         //
-        // Lee una letra y, opcionalmente, avanza la posición de lectura.
-        //
-        private bool LeerLetra(out InfoLetra infoLetra)
-        {
-            var éxito = MirarLetra(out infoLetra);
-            ConsumirLetra();
-
-            return éxito;
-        }
-
-
-        //
         // Lee la letra en la posición indicada sin avanzar la posición de lectura.
         //
         private bool MirarLetra(int avance, out char letra)
@@ -501,11 +489,6 @@ namespace Textuo
 
             letra = contexto.Palabra[posición];
             return true;
-        }
-
-        private bool MirarLetra(out char letra)
-        {
-            return MirarLetra(0, out letra);
         }
 
         private bool MirarLetra(int avance, out InfoLetra infoLetra)
